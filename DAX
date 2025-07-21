@@ -1,0 +1,126 @@
+DAX for AvgCPC
+AvgCPC = AVERAGE(Simulated_Meta_Ads_Campaign_Data[CPC (USD)])
+
+DAX for AvgROAS
+AvgROAS = AVERAGE(Simulated_Meta_Ads_Campaign_Data[ROAS])
+
+DAX for ConversionRate
+ConvertionRate% = DIVIDE([TotalConversions],[TotalClicks])*100
+
+DAX For CostPerResult
+CostPerResult = DIVIDE(SUM(Simulated_Meta_Ads_Campaign_Data[Spend (USD)]),SUM(Simulated_Meta_Ads_Campaign_Data[Conversions]))
+
+DAX For CTR
+CTR% = DIVIDE([TotalClicks],[TotalImpression])*100
+
+DAX For ROASFlag
+ROASFlag = IF([AvgROAS]>10,"Outlier","Normal")
+
+DAX For TotalClicks
+TotalClicks = SUM(Simulated_Meta_Ads_Campaign_Data[Clicks])
+
+DAX For TotalConversions
+TotalConversions = SUM(Simulated_Meta_Ads_Campaign_Data[Conversions])
+
+DAX For TotalImpression
+TotalImpression = SUM(Simulated_Meta_Ads_Campaign_Data[Impressions])
+
+DAX For TotalRevenue
+TotalRevenue = SUM(Simulated_Meta_Ads_Campaign_Data[Revenue (USD)])
+
+DAX For TotalSpend
+TotalSpend = SUM(Simulated_Meta_Ads_Campaign_Data[Spend (USD)])
+
+DAX for Campaign Verdict
+
+CampaignVerdict = 
+SWITCH(
+    TRUE(),
+    [AvgROAS]>=4 &&
+    [CTR%]>=2.5 &&
+    [ConvertionRate%]>=3 &&
+    [AvgCPC]<=1.5 &&
+    [CostPerResult]<=10,
+    "Best Performing",
+
+    [AvgROAS]<2 &&
+    [CTR%]<1.5 &&
+    [ConvertionRate%]<2,
+    "Poor Performing",
+
+    (
+        ([AvgROAS]<4)+
+        ([CTR%]<2.5)+
+        ([ConvertionRate%]<3)+
+        ([AvgCPC]>1.5)+
+        ([CostPerResult]>10)
+    )>=3,
+        "Needs Improvement",
+
+        "Mixed Performance"
+
+
+
+    )
+
+DAX For CampaignRecommendations
+
+CampaignRecommendation = 
+SWITCH(TRUE(),
+    [CampaignVerdict] = "Best Performing",
+        "This campaign is performing excellently. Consider increasing the budget or scaling across other platforms. Leverage this as a benchmark for creative and targeting strategy.",
+        
+    [CampaignVerdict] = "Mixed Performance",
+        VAR LowCTR = [CTR%] < 2.5
+        VAR LowConversion = [ConvertionRate%] < 3
+        VAR HighCPC = [AvgCPC] > 1.5
+        VAR LowROAS = [AvgROAS] < 4
+        VAR AnyIssue = LowCTR || LowConversion || HighCPC || LowROAS
+        RETURN
+            "Investigate: " &
+            IF(LowCTR, "• Improve ad creative or targeting to increase CTR. ", "") &
+            IF(LowConversion, "• Optimise landing page experience or offers. ", "") &
+            IF(HighCPC, "• Narrow down audience or test lower-cost placements. ", "") &
+            IF(LowROAS, "• Reassess product pricing, targeting, or funnel. ", "") &
+            IF(
+                NOT AnyIssue,"• Metrics are within acceptable range, but continue monitoring.","")
+            ,
+
+    [CampaignVerdict] = "Needs Improvement",
+        VAR LowCTR = [CTR%] < 2.5
+        VAR LowConversion = [ConvertionRate%] < 3
+        VAR HighCPC = [AvgCPC] > 1.5
+        VAR LowROAS = [AvgROAS] < 4
+        VAR HighCostPerResult = [CostPerResult] > 10
+        RETURN
+            "Action Plan: " &
+            IF(LowCTR, "• A/B test creatives or rework messaging. ", "") &
+            IF(LowConversion, "• Improve landing page design or simplify lead form. ", "") &
+            IF(HighCPC, "• Test broader audience segments or use automatic placements. ", "") &
+            IF(LowROAS, "• Apply upselling or bundling tactics to improve returns. ", "") &
+            IF(HighCostPerResult, "• Reassess bid strategy or use campaign budget optimization. ", "") &
+            IF(
+                NOT (LowCTR || LowConversion || HighCPC || LowROAS || HighCostPerResult),
+                "• General performance lagging. Consider full audit of targeting, creatives, and funnel.",
+                ""
+            ),
+
+    [CampaignVerdict] = "Poor Performing",
+        "Recommendation: Pause the campaign. It’s underperforming across key metrics. Redistribute budget to better-performing campaigns or relaunch with new creatives, targeting, and offer strategy.",
+
+    "No recommendation available"
+)
+
+
+DAX For Creating Table
+
+DateTable = 
+ADDCOLUMNS (
+    CALENDAR (DATE(2025, 1, 1), DATE(2025, 12, 31)),
+    "Year", YEAR([Date]),
+    "Month Number", MONTH([Date]),
+    "Month", FORMAT([Date], "MMMM"),
+    "Weekday", FORMAT([Date], "dddd"),
+    "Quarter", "Q" & FORMAT([Date], "Q"),
+    "MonthYear", FORMAT([Date], "MMM YYYY")
+)
