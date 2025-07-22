@@ -36,32 +36,36 @@ DAX for Campaign Verdict
 CampaignVerdict = 
 SWITCH(
     TRUE(),
-    [AvgROAS]>=4 &&
-    [CTR%]>=2.5 &&
-    [ConvertionRate%]>=3 &&
-    [AvgCPC]<=1.5 &&
-    [CostPerResult]<=10,
-    "Best Performing",
 
-    [AvgROAS]<2 &&
-    [CTR%]<1.5 &&
-    [ConvertionRate%]<2,
-    "Poor Performing",
-
+    // Best Performing: Meets 4 or more benchmarks
     (
-        ([AvgROAS]<4)+
-        ([CTR%]<2.5)+
-        ([ConvertionRate%]<3)+
-        ([AvgCPC]>1.5)+
-        ([CostPerResult]>10)
-    )>=3,
-        "Needs Improvement",
+        ([AvgROAS] >= 4) +
+        ([CTR%] >= 2.5) +
+        ([ConvertionRate%] >= 3) +
+        ([AvgCPC] <= 1.5) +
+        ([CostPerResult] <= 10)
+    ) >= 4, "Best Performing",
 
-        "Mixed Performance"
+    // Needs Improvement: Fails 3 or more benchmarks
+    (
+        ([AvgROAS] < 4) +
+        ([CTR%] < 2.5) +
+        ([ConvertionRate%] < 3) +
+        ([AvgCPC] > 1.5) +
+        ([CostPerResult] > 10)
+    ) >= 3, "Needs Improvement",
+
+    // Poor Performing: Extremely low results in core metrics
+    [AvgROAS] < 2 &&
+    [CTR%] < 1.5 &&
+    [ConvertionRate%] < 2, "Poor Performing",
+
+    // Mixed = everything else
+    "Mixed Performance"
+)
 
 
-
-    )
+       
 
 DAX For CampaignRecommendations
 
